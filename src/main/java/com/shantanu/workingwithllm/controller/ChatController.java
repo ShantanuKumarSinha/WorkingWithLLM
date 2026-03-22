@@ -57,7 +57,12 @@ public class ChatController {
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(@RequestParam(defaultValue = "Tell me a joke") String message) {
         return chatService.streamChat(message)
-                .map(response -> response.getResult().getOutput().getContent());
+                .mapNotNull(response -> {
+                    if (response.getResult() == null) return null;
+                    var output = response.getResult().getOutput();
+                    return output != null ? output.getContent() : null;
+                })
+                .filter(content -> !content.isEmpty());
     }
 
     /**
